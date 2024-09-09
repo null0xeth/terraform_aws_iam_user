@@ -3,20 +3,6 @@ resource "random_pet" "env" {
   separator = "_"
 }
 
-##### AWS KMS KEY #################################################
-resource "aws_kms_key" "new_key" {
-  count                   = (var.aws_kms_key_create ? 1 : 0)
-  description             = var.aws_kms_key_config.description
-  enable_key_rotation     = var.aws_kms_key_config.rotation
-  deletion_window_in_days = var.aws_kms_key_config.deletion
-}
-
-resource "aws_kms_key_policy" "vault_unseal" {
-  count  = (var.aws_kms_key_create ? 1 : 0)
-  key_id = element(aws_kms_key.new_key[*], 0).id #aws_kms_key.vault_unseal.id
-  policy = jsonencode(var.aws_kms_key_policy)
-}
-
 ##### AWS IAM USER #################################################
 resource "aws_iam_user" "account" {
   name          = "${var.aws_iam_user}-${random_pet.env.id}"
@@ -36,20 +22,9 @@ resource "aws_iam_user_policy" "user-account-policy" {
   policy = jsonencode(var.aws_iam_user_policy) #data.aws_iam_policy_document.account-policy.json
 }
 
-output "kms" {
-  value = zipmap(
-    [
-      "kms_key_arn",
-      "kms_key_id",
-    ],
-    [
-      element(aws_kms_key.new_key[*], 0).arn,
-      element(aws_kms_key.new_key[*], 0).key_id,
-    ]
-  )
-}
 
 output "user" {
+  description = "Map with user-specific data for use in other modules"
   value = zipmap(
     [
       "user_arn",
