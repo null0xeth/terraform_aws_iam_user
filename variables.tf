@@ -4,6 +4,7 @@ variable "provider_aws" {
     region = optional(string)
   })
 }
+
 variable "aws_kms_key_create" {
   type        = bool
   default     = true
